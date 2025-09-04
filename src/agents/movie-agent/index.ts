@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Response } from "express";
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
 import cors from "cors";
 
@@ -293,6 +293,26 @@ const movieAgentCard: AgentCard = {
   supportsAuthenticatedExtendedCard: false,
 };
 
+// ---- helpers ----
+function readClientPrincipal(req) {
+  const b64 = req.headers["x-ms-client-principal"];
+  if (!b64) return null;
+  const json = Buffer.from(b64, "base64").toString("utf8");
+  return JSON.parse(json); // { userId, userDetails, identityProvider, claims: [...] }
+}
+
+// Azure Easy Auth can issue different token headers if configured:
+// - X-MS-TOKEN-AAD-ACCESS-TOKEN (for AAD resource/scopes)
+// - X-MS-TOKEN-AAD-ID-TOKEN
+// - X-MS-TOKEN-MICROSOFTACCOUNT-ACCESS-TOKEN (etc., for other providers)
+function readTokens(req) {
+  const headers = req.headers;
+  return {
+    aadAccessToken: headers["x-ms-token-aad-access-token"] || null,
+    aadIdToken: headers["x-ms-token-aad-id-token"] || null,
+  };
+}
+
 async function main() {
   // 1. Create TaskStore
   const taskStore: TaskStore = new InMemoryTaskStore();
@@ -318,6 +338,63 @@ async function main() {
     allowedHeaders: ["Content-Type", "Authorization"]  // add more if needed
   }));
   expressApp.options("*", cors());
+
+  // Convenience: trigger login (optionally request specific scopes)
+  expressApp.get("/login", (req, res) => {
+    // Accept ?scopes=... so you can request tokens for Graph or your API
+    const scopes = req.query.scopes
+      ? `?scopes=${encodeURIComponent(String(req.query.scopes))}`
+      : "";
+    res.redirect(`/.auth/login/aad${scopes}`);
+  });
+
+  expressApp.get("/logout", (_req, res) => res.redirect("/.auth/logout"));
+
+  // Who am I? (decode the Easy Auth header)
+  // ignore tslint warning for now
+  // @ts-ignore
+  expressApp.get("/auth/me", (req, res) => {
+    const me = readClientPrincipal(req);
+    if (!me) return res.status(401).json({ error: "Not authenticated" });
+    res.json(me);
+  });
+
+  // Give me the token(s) that Easy Auth placed on the request
+  // ignore tslint warning for now
+  // @ts-ignore
+  expressApp.get("/auth/token", (req, res) => {
+    const me = readClientPrincipal(req);
+    if (!me) return res.status(401).json({ error: "Not authenticated" });
+
+    const { aadAccessToken, aadIdToken } = readTokens(req);
+
+    if (!aadAccessToken && !aadIdToken) {
+      return res.status(400).json({
+        error:
+          "No tokens found on the request. Ensure Token Store is enabled and that you requested scopes/audiences in the Authentication blade.",
+        tips: {
+          enableTokenStore: "Portal → Authentication → Token Store = Enabled",
+          requestScopes:
+            "Login via /login?scopes=<space-separated scopes, url-encoded>",
+          exampleScopes:
+            "api://<your-api-client-id>/user_impersonation openid profile offline_access",
+        },
+      });
+    }
+
+    res.json({
+      user: { id: me.userId, name: me.userDetails, provider: me.identityProvider },
+      tokens: {
+        access_token: aadAccessToken, // send only what you actually need
+        id_token: aadIdToken,
+      },
+    });
+  });
+
+  // Optional: force-refresh session with Easy Auth (if your access token expired)
+  expressApp.post("/auth/refresh", (_req, res) => {
+    res.redirect(307, "/.auth/refresh"); // Easy Auth refresh endpoint
+  });
 
   // ignore the deprecation warning for now
   // @ts-ignore
