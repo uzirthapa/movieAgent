@@ -256,7 +256,7 @@ const movieAgentCard: AgentCard = {
   name: 'Movie Agent',
   description: 'An agent that can answer questions about movies and actors using TMDB.',
   // Adjust the base URL and port as needed. /a2a is the default base in A2AExpressApp
-  url: 'http://localhost:41241/', // Example: if baseUrl in A2AExpressApp 
+  url: `${process.env.BASE_URL}`, // Example: if baseUrl in A2AExpressApp 
   provider: {
     organization: 'A2A Samples',
     url: 'https://example.com/a2a-samples' // Added provider URL
@@ -327,7 +327,7 @@ async function main() {
   const PORT = Number(process.env.PORT) || 41241;
   expressApp.listen(PORT, "0.0.0.0", () => {
     console.log(`[MovieAgent] Server using new framework started on http://localhost:${PORT}`);
-    console.log(`[MovieAgent] Agent Card: http://localhost:${PORT}/.well-known/agent.json`);
+    console.log(`[MovieAgent] Agent Card: ${process.env.BASE_URL}/.well-known/agent.json`);
     console.log('[MovieAgent] Press Ctrl+C to stop the server');
   });
 }
