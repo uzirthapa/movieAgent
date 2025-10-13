@@ -266,6 +266,19 @@ const movieAgentCard: AgentCard = {
     streaming: true, // The new framework supports streaming
     pushNotifications: false, // Assuming not implemented for this agent yet
     stateTransitionHistory: true, // Agent uses history
+    "extensions": [
+      {
+        "uri": "https://example.com/ext/konami-code/v1",
+        "description": "Provide cheat codes to unlock new fortunes",
+        "required": false,
+        "params": {
+          "hints": [
+            "When your sims need extra cash fast",
+            "You might deny it, but we've seen the evidence of those cows."
+          ],
+        },
+      },
+    ],
   },
   // authentication: null, // Property 'authentication' does not exist on type 'AgentCard'.
   securitySchemes: undefined, // Or define actual security schemes if any
