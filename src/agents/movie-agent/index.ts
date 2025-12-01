@@ -278,6 +278,17 @@ const movieAgentCard: AgentCard = {
           ],
         },
       },
+      {
+        "description": "Allows clients to provide the last 4 digits of the card for secure identification",
+        "params": {
+          "https://cba.com/ext/card-last4/v1/digits": {
+            "type": "string",
+            "description": "The last 4 digits of the credit card"
+          }
+        },
+        "required": true,
+        "uri": "https://cba.com/ext/card-last4/v1"
+      },
     ],
   },
   // authentication: null, // Property 'authentication' does not exist on type 'AgentCard'.
