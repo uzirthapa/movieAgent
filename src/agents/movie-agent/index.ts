@@ -268,26 +268,31 @@ const movieAgentCard: AgentCard = {
     stateTransitionHistory: true, // Agent uses history
     "extensions": [
       {
-        "uri": "https://example.com/ext/konami-code/v1",
-        "description": "Provide cheat codes to unlock new fortunes",
-        "required": false,
-        "params": {
-          "hints": [
-            "When your sims need extra cash fast",
-            "You might deny it, but we've seen the evidence of those cows."
-          ],
-        },
-      },
-      {
+        "uri": "copilotstudio.microsoft.com/a2a/extensions/inputs/v1",
         "description": "Allows clients to provide the last 4 digits of the card for secure identification",
+        "required": true,
         "params": {
-          "https://cba.com/ext/card-last4/v1/digits": {
+          "query": {
             "type": "string",
             "description": "The last 4 digits of the credit card"
+          },
+          "intent": {
+            "type": "boolean",
+            "displayName": "Intent",
+            "description": "If the credit card is from a premium tier"
           }
-        },
-        "required": true,
-        "uri": "https://cba.com/ext/card-last4/v1"
+        }
+      },
+      {
+        "uri": "copilotstudio.microsoft.com/a2a/extensions/outputs/v1",
+        "description": "The response from the agent",
+        "required": false,
+        "params": {
+          "response": {
+            "type": "string",
+            "description": "The response from the agent"
+          },
+        }
       },
     ],
   },
