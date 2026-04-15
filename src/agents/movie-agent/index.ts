@@ -373,7 +373,7 @@ async function main() {
   expressApp.options("*", cors());
 
   // V1 Agent Card route — served before SDK routes so it doesn't conflict
-  expressApp.get('/.well-known/agent-card-v1.json', (_req, res) => {
+  expressApp.get('/.well-known/agent-card.json', (_req, res) => {
     res.json(movieAgentCardV1);
   });
 
@@ -386,7 +386,7 @@ async function main() {
   expressApp.listen(PORT, "0.0.0.0", () => {
     console.log(`[MovieAgent] Server using new framework started on http://localhost:${PORT}`);
     console.log(`[MovieAgent] Agent Card (v0.3): ${process.env.BASE_URL}/.well-known/agent.json`);
-    console.log(`[MovieAgent] Agent Card (v1):   ${process.env.BASE_URL}/.well-known/agent-card-v1.json`);
+    console.log(`[MovieAgent] Agent Card (v1):   ${process.env.BASE_URL}/.well-known/agent-card.json`);
     console.log('[MovieAgent] Press Ctrl+C to stop the server');
   });
 }
