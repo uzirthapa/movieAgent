@@ -322,6 +322,30 @@ const movieAgentCard: AgentCard = {
   supportsAuthenticatedExtendedCard: false,
 };
 
+// V1 Agent Card — uses `supportedInterfaces` instead of top-level `url`/`protocolVersion`
+const movieAgentCardV1 = {
+  name: movieAgentCard.name,
+  description: movieAgentCard.description,
+  provider: movieAgentCard.provider,
+  version: movieAgentCard.version,
+  capabilities: {
+    streaming: movieAgentCard.capabilities.streaming,
+    pushNotifications: movieAgentCard.capabilities.pushNotifications,
+    stateTransitionHistory: movieAgentCard.capabilities.stateTransitionHistory,
+    extensions: movieAgentCard.capabilities.extensions,
+  },
+  defaultInputModes: movieAgentCard.defaultInputModes,
+  defaultOutputModes: movieAgentCard.defaultOutputModes,
+  skills: movieAgentCard.skills,
+  supportedInterfaces: [
+    {
+      url: `${process.env.BASE_URL}`,
+      protocolBinding: 'JSONRPC',
+      protocolVersion: '1.0.0',
+    },
+  ],
+};
+
 async function main() {
   // 1. Create TaskStore
   const taskStore: TaskStore = new InMemoryTaskStore();
@@ -348,6 +372,11 @@ async function main() {
   }));
   expressApp.options("*", cors());
 
+  // V1 Agent Card route — served before SDK routes so it doesn't conflict
+  expressApp.get('/.well-known/agent-card-v1.json', (_req, res) => {
+    res.json(movieAgentCardV1);
+  });
+
   // ignore the deprecation warning for now
   // @ts-ignore
   appBuilder.setupRoutes(expressApp);
@@ -356,7 +385,8 @@ async function main() {
   const PORT = Number(process.env.PORT) || 41241;
   expressApp.listen(PORT, "0.0.0.0", () => {
     console.log(`[MovieAgent] Server using new framework started on http://localhost:${PORT}`);
-    console.log(`[MovieAgent] Agent Card: ${process.env.BASE_URL}/.well-known/agent.json`);
+    console.log(`[MovieAgent] Agent Card (v0.3): ${process.env.BASE_URL}/.well-known/agent.json`);
+    console.log(`[MovieAgent] Agent Card (v1):   ${process.env.BASE_URL}/.well-known/agent-card-v1.json`);
     console.log('[MovieAgent] Press Ctrl+C to stop the server');
   });
 }
